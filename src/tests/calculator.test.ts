@@ -11,6 +11,12 @@ import { calculateGstBenefit } from '../calculator/gst';
 import { determineEvFbtEligibility } from '../calculator/fbt';
 import { calculateNovatedLeaseScenario } from '../calculator/scenario';
 import {
+  calculatePotentialSuperImpact,
+  SUPER_GUARANTEE_MAXIMUM_BASE,
+  SUPER_GUARANTEE_MAXIMUM_ANNUAL_PAYMENT,
+  SUPER_GUARANTEE_RATE,
+} from '../calculator/superannuation';
+import {
   calculateLeaseTermOutlook,
   calculateScenarioCases,
   compareAfterTax,
@@ -47,6 +53,44 @@ describe('demo defaults', () => {
     expect(DEFAULT_INPUTS.servicing).toBe(200);
     expect(DEFAULT_INPUTS.interestRate).toBe(11);
     expect(DEFAULT_INPUTS.adminMonthly).toBe(31);
+  });
+});
+
+describe('potential super impact', () => {
+  it('estimates reduced employer super separately from the lease totals', () => {
+    const s = scenario();
+    const impact = calculatePotentialSuperImpact(
+      s.inputs.salary,
+      s.packaging.preTax,
+      s.inputs.years,
+    );
+
+    expect(impact.rate).toBe(SUPER_GUARANTEE_RATE);
+    expect(impact.maximumContributionBase).toBe(SUPER_GUARANTEE_MAXIMUM_BASE);
+    expect(impact.maximumAnnualPayment).toBe(SUPER_GUARANTEE_MAXIMUM_ANNUAL_PAYMENT);
+    expect(impact.annualLoss).toBeCloseTo(s.packaging.preTax * SUPER_GUARANTEE_RATE, 8);
+    expect(impact.termLoss).toBeCloseTo(impact.annualLoss * s.inputs.years, 8);
+    expect(s.totalCost.outOfPocket).toBeCloseTo(
+      s.takeHomeImpact.annual * s.inputs.years + s.residual.payout,
+      7,
+    );
+  });
+
+  it('stops showing a loss when both salary bases are above the annual cap', () => {
+    const impact = calculatePotentialSuperImpact(300000, 20000, 3);
+
+    expect(impact.superableBaseBefore).toBe(SUPER_GUARANTEE_MAXIMUM_BASE);
+    expect(impact.superableBaseAfter).toBe(SUPER_GUARANTEE_MAXIMUM_BASE);
+    expect(impact.annualLoss).toBe(0);
+    expect(impact.termLoss).toBe(0);
+  });
+
+  it('only counts the portion that crosses the annual cap', () => {
+    const impact = calculatePotentialSuperImpact(280000, 20000, 1);
+
+    expect(impact.superableBaseBefore).toBe(SUPER_GUARANTEE_MAXIMUM_BASE);
+    expect(impact.superableBaseAfter).toBe(260000);
+    expect(impact.annualLoss).toBeCloseTo((SUPER_GUARANTEE_MAXIMUM_BASE - 260000) * 0.12, 8);
   });
 });
 

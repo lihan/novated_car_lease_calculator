@@ -174,6 +174,26 @@ const messages: Record<Locale, Record<string, string>> = {
     comparedWithOutright: 'compared with buying outright.',
     comparisonNote:
       'The outright option pays the vehicle upfront. Both options include running costs for the selected term, retain the vehicle at the end and assume no resale value.',
+    superImpact: 'SUPERANNUATION CHECK',
+    superImpactTitle: 'Potential employer super loss',
+    superImpactDescription:
+      'If your employer calculates super on a reduced base salary, the pre-tax package deduction may reduce the super guarantee paid on your behalf.',
+    superAnnualLoss: 'Potential annual super loss',
+    superTermLoss: 'Potential loss over selected term',
+    superFormula: '(Capped super base before − capped super base after) × SG rate',
+    superWorking: 'Working',
+    superReducedSalary: 'Salary after pre-tax reduction',
+    superCappedBaseAfter: 'Capped super base after',
+    superExcluded: 'Separate estimate · not included in calculator totals',
+    superCapBase: 'ATO annual SG earnings cap',
+    superMaxPayment: 'Maximum SG at 12%',
+    perFinancialYear: 'per financial year',
+    superCapNote:
+      'For FY2026–27, the ATO maximum contribution base is $270,830 per year. At 12%, minimum SG is capped at $32,499.60; once qualifying earnings reach the base, no further minimum SG is required for that year.',
+    superNoLoss:
+      'The annual cap absorbs the full salary reduction in this scenario, so no potential SG loss is shown.',
+    superAssumption:
+      'This estimate compares the capped superable salary before and after the pre-tax package deduction. The cap resets each financial year, so the selected-term figure assumes the same salary and package each year. It does not change the lease calculation.',
     step4Working: 'STEP 4 · WORKING',
     allCalculationSteps: 'All calculation steps',
     showWorking: 'Show all calculation steps',
@@ -350,6 +370,25 @@ const messages: Record<Locale, Record<string, string>> = {
     comparedWithOutright: '相比全款购买。',
     comparisonNote:
       '全款购买会先支付车辆价格。两种方案都包含所选期限内的运行成本，期末保留车辆，并且不假设转售价值。',
+    superImpact: '养老金提示',
+    superImpactTitle: '潜在雇主养老金损失',
+    superImpactDescription:
+      '如果雇主按降低后的基本薪资计算 Super Guarantee（SG），税前薪资打包扣款可能减少雇主代你缴纳的养老金。',
+    superAnnualLoss: '预计每年养老金损失',
+    superTermLoss: '所选期限预计损失',
+    superFormula: '（上限前可计养老金基数 − 上限后可计养老金基数）× SG 费率',
+    superWorking: '计算过程',
+    superReducedSalary: '税前扣款后的薪资',
+    superCappedBaseAfter: '应用上限后的养老金基数',
+    superExcluded: '独立估算 · 不计入计算器现有总额',
+    superCapBase: 'ATO 年度 SG 收入上限',
+    superMaxPayment: '按 12% 计算的最高 SG',
+    perFinancialYear: '每个财年',
+    superCapNote:
+      '2026–27 财年 ATO 的最高缴纳基数为每年 $270,830。按 12% 计算，最低 SG 每年最多为 $32,499.60；当合资格收入达到该基数后，该财年不再需要继续缴纳最低 SG。',
+    superNoLoss: '本方案中的年度上限已覆盖全部薪资减少额，因此不显示潜在 SG 损失。',
+    superAssumption:
+      '本估算比较税前薪资打包扣款前后的可计养老金薪资基数，并应用年度上限。该上限每个财年重置，因此所选期限金额假设每年薪资和打包金额不变，不会改变租赁计算结果。',
     step4Working: '步骤 4 · 计算过程',
     allCalculationSteps: '全部计算步骤',
     showWorking: '显示全部计算步骤',
