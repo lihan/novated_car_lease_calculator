@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { DEFAULT_INPUTS } from '../src/calculator/defaults';
 import { calculateNovatedLeaseScenario } from '../src/calculator/scenario';
+import { calculatePotentialSuperImpact } from '../src/calculator/superannuation';
 import { money } from '../src/utils/format';
 
 test('initial result matches the pure engine and fits the viewport', async ({ page }, testInfo) => {
@@ -8,7 +9,21 @@ test('initial result matches the pure engine and fits the viewport', async ({ pa
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
   const s = calculateNovatedLeaseScenario(DEFAULT_INPUTS);
+  const superImpact = calculatePotentialSuperImpact(
+    s.inputs.salary,
+    s.packaging.preTax,
+    s.inputs.years,
+  );
   await expect(page.getByTestId('monthly-impact')).toHaveText(money(s.takeHomeImpact.monthly));
+  await expect(page.getByTestId('super-impact')).toBeVisible();
+  await expect(page.getByTestId('super-annual-loss')).toHaveText(money(superImpact.annualLoss));
+  await expect(page.getByTestId('super-term-loss')).toHaveText(money(superImpact.termLoss));
+  await expect(page.getByTestId('super-reduced-salary')).toContainText(
+    money(superImpact.reducedSalary),
+  );
+  await expect(page.getByTestId('super-capped-base-after')).toContainText(
+    money(superImpact.superableBaseAfter),
+  );
   await expect(page.locator('.duration-table tbody tr')).toHaveCount(5);
   await expect(page.locator('.duration-table .current-row td').last()).toHaveText(
     money(s.totalCost.outOfPocket),
@@ -32,6 +47,20 @@ test('initial result matches the pure engine and fits the viewport', async ({ pa
   expect(errors).toEqual([]);
 });
 
+test('super impact respects the annual ATO contribution cap', async ({ page }) => {
+  await page.goto('/');
+  const salary = page.getByLabel('Gross annual salary', { exact: true });
+  await salary.click();
+  await expect(salary).toHaveValue('150000');
+  await salary.fill('300000');
+
+  await expect(page.getByTestId('super-cap')).toHaveText('$270,830.00');
+  await expect(page.getByTestId('super-max-payment')).toHaveText('$32,499.60');
+  await expect(page.getByTestId('super-annual-loss')).toHaveText('$0.00');
+  await expect(page.getByTestId('super-term-loss')).toHaveText('$0.00');
+  await expect(page.getByTestId('super-impact')).toContainText('no potential SG loss is shown');
+});
+
 test('Chinese locale translates the calculator without changing the result', async ({ page }) => {
   await page.goto('/');
   const initial = await page.getByTestId('monthly-impact').textContent();
@@ -47,6 +76,7 @@ test('Chinese locale translates the calculator without changing the result', asy
   await expect(page.locator('.duration-table thead th').nth(1)).toHaveText('每月成本');
   await expect(page.getByText('每月付款', { exact: true })).toBeVisible();
   await expect(page.getByText('年度成本（自付）', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '潜在雇主养老金损失' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '全部计算步骤' })).toBeVisible();
   await expect(page.locator('#working-ledger')).toBeHidden();
   await expect(page.locator('[data-testid="outright-comparison"]')).toBeVisible();

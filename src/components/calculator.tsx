@@ -24,6 +24,7 @@ import {
 } from '@/i18n';
 import NumberField from './number-field';
 import CostComparison from './cost-comparison';
+import SuperImpact from './super-impact';
 import { InlineWorking, WorkingLedger } from './working';
 
 type NumericKey = {
@@ -602,6 +603,13 @@ export default function Calculator() {
                 {tr('confirmGstThresholds')}
               </p>
             </div>
+            <SuperImpact
+              annualSalary={s.inputs.salary}
+              salaryBaseReduction={s.packaging.preTax}
+              years={s.inputs.years}
+              termLabel={`${s.inputs.years} ${s.inputs.years === 1 ? tr('year') : tr('years')}`}
+              locale={locale}
+            />
             {(inputs.helpDebt ||
               !inputs.privateHospitalCover ||
               !s.eligibility.exempt ||
