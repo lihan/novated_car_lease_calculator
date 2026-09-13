@@ -342,10 +342,6 @@ describe('whole-scenario accounting', () => {
         s.inputs.upfrontAfterTax -
         s.inputs.endAfterTax,
     ).toBeCloseTo(s.residual.payout, 7);
-    expect(s.savings.rows.reduce((sum, r) => sum + r.lifetime, 0)).toBeCloseTo(
-      s.savings.totalBenefit,
-      7,
-    );
     expect(
       s.savings.vehicleIncomeTax + s.savings.energyIncomeTax + s.savings.otherIncomeTax,
     ).toBeCloseTo(s.savings.incomeTax, 7);

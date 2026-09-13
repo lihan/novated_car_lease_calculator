@@ -12,18 +12,18 @@ import {
 import type { NormalizedInputs, LeaseYears, CalculationStep } from '@/calculator/types';
 import { DEFAULT_INPUTS } from '@/calculator/defaults';
 import { calculateNovatedLeaseScenario } from '@/calculator/scenario';
-import { compareLeaseDurations } from '@/calculator/comparison';
+import { compareCashPurchase, compareLeaseDurations } from '@/calculator/comparison';
 import { validateInputs } from '@/calculator/validation';
 import { money, percent } from '@/utils/format';
 import {
   translate,
-  translateBreakdownLabel,
   translateEligibilityStatus,
   translateValidationIssue,
   translateWarning,
   type Locale,
 } from '@/i18n';
 import NumberField from './number-field';
+import CostComparison from './cost-comparison';
 import { InlineWorking, WorkingLedger } from './working';
 
 type NumericKey = {
@@ -57,11 +57,11 @@ export default function Calculator() {
   const [inputs, setInputs] = useState<NormalizedInputs>(DEFAULT_INPUTS);
   const [fieldError, setFieldError] = useState<string[]>([]);
   const [resetKey, setResetKey] = useState(0);
-  const [activeTab, setActiveTab] = useState<'breakdown' | 'savings'>('breakdown');
   const [locale, setLocale] = useState<Locale>('en');
   const scenario = useMemo(() => calculateNovatedLeaseScenario(inputs), [inputs]);
   const durationRows = useMemo(() => compareLeaseDurations(inputs), [inputs]);
   const s = scenario;
+  const outrightComparison = useMemo(() => compareCashPurchase(s), [s]);
   const tr = (key: string) => translate(locale, key);
   useEffect(() => {
     document.documentElement.lang = locale === 'zh' ? 'zh-CN' : 'en-AU';
@@ -98,12 +98,6 @@ export default function Calculator() {
         {...options}
       />
     );
-  }
-  function revealWorking(section: string) {
-    document.getElementById(`working-${section}`)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
   }
   return (
     <>
@@ -628,131 +622,6 @@ export default function Calculator() {
                   ))}
               </div>
             )}
-            <section className="results-panel">
-              <div className="tab-header">
-                <div
-                  role="tablist"
-                  aria-label={tr('detailedResults')}
-                  onKeyDown={(event) => {
-                    if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
-                      event.preventDefault();
-                      const next =
-                        event.key === 'Home'
-                          ? 'breakdown'
-                          : event.key === 'End'
-                            ? 'savings'
-                            : activeTab === 'breakdown'
-                              ? 'savings'
-                              : 'breakdown';
-                      setActiveTab(next);
-                      document.getElementById(`${next}-tab`)?.focus();
-                    }
-                  }}
-                >
-                  <button
-                    id="breakdown-tab"
-                    tabIndex={activeTab === 'breakdown' ? 0 : -1}
-                    role="tab"
-                    aria-selected={activeTab === 'breakdown'}
-                    aria-controls="breakdown-panel"
-                    onClick={() => setActiveTab('breakdown')}
-                  >
-                    {tr('costBreakdown')}
-                  </button>
-                  <button
-                    id="savings-tab"
-                    tabIndex={activeTab === 'savings' ? 0 : -1}
-                    role="tab"
-                    aria-selected={activeTab === 'savings'}
-                    aria-controls="savings-panel"
-                    onClick={() => setActiveTab('savings')}
-                  >
-                    {tr('taxGstSavings')}
-                  </button>
-                </div>
-                <span className="small-muted">{tr('allAmountsAud')}</span>
-              </div>
-              {activeTab === 'breakdown' ? (
-                <div id="breakdown-panel" role="tabpanel" aria-labelledby="breakdown-tab">
-                  <div className="table-scroll">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>{tr('duringLease')}</th>
-                          <th>{tr('monthly')}</th>
-                          <th>{tr('annual')}</th>
-                          <th>{tr('wholeTerm')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {s.breakdown.map((row) => (
-                          <tr
-                            key={row.label}
-                            className={row.label === 'Take-home pay decrease' ? 'emphasis-row' : ''}
-                          >
-                            <th scope="row">
-                              <button
-                                className="text-button"
-                                onClick={() => revealWorking(row.section)}
-                              >
-                                {translateBreakdownLabel(locale, row.label)}
-                              </button>
-                            </th>
-                            <td>{money(row.monthly)}</td>
-                            <td>{money(row.annual)}</td>
-                            <td>{money(row.lifetime)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="panel-footer">
-                    <span>
-                      {tr('includedFinanceInterest')} <strong>{money(s.lease.interest)}</strong>
-                    </span>
-                    <span>
-                      {tr('finalResidual')} <strong>{money(s.residual.payout)}</strong>
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div id="savings-panel" role="tabpanel" aria-labelledby="savings-tab">
-                  <div className="table-scroll">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>{tr('benefitComponent')}</th>
-                          <th>{tr('annual')}</th>
-                          <th>{tr('wholeTerm')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {s.savings.rows.map((row) => (
-                          <tr key={row.label}>
-                            <th scope="row">{translateBreakdownLabel(locale, row.label)}</th>
-                            <td>{row.annual === null ? tr('oneOff') : money(row.annual)}</td>
-                            <td>{money(row.lifetime)}</td>
-                          </tr>
-                        ))}
-                        <tr className="emphasis-row">
-                          <th>{tr('totalEstimatedBenefit')}</th>
-                          <td>
-                            {locale === 'zh'
-                              ? `${s.inputs.years} ${tr('overYears')}`
-                              : `Over ${s.inputs.years} years`}
-                          </td>
-                          <td>{money(s.savings.totalBenefit)}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="panel-footnote">{tr('savingsNote')}</p>
-                  <div className="panel-working">
-                    <InlineWorking steps={s.savings.steps} locale={locale} />
-                  </div>
-                </div>
-              )}
-            </section>
             <section className="results-panel duration-panel" aria-labelledby="duration-heading">
               <div className="section-heading duration-heading">
                 <div>
@@ -812,6 +681,13 @@ export default function Calculator() {
               </div>
               <p className="duration-footnote">{tr('selectedTermNote')}</p>
             </section>
+            <CostComparison
+              cashTotal={outrightComparison.total}
+              novatedTotal={s.totalCost.outOfPocket}
+              difference={outrightComparison.differenceFromNovated}
+              termLabel={`${s.inputs.years} ${s.inputs.years === 1 ? tr('year') : tr('years')}`}
+              locale={locale}
+            />
             <section id="working" className="results-panel working-panel">
               <div className="section-heading">
                 <div>
@@ -820,9 +696,15 @@ export default function Calculator() {
                   <p>{tr('workingHelper')}</p>
                 </div>
               </div>
-              <div id="working-ledger">
-                <WorkingLedger sections={s.explanations} locale={locale} />
-              </div>
+              <details className="working-disclosure">
+                <summary>
+                  <span className="working-toggle-closed">{tr('showWorking')}</span>
+                  <span className="working-toggle-open">{tr('hideWorking')}</span>
+                </summary>
+                <div id="working-ledger">
+                  <WorkingLedger sections={s.explanations} locale={locale} />
+                </div>
+              </details>
             </section>
           </div>
         </div>

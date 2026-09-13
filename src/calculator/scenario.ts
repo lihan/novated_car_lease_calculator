@@ -102,41 +102,6 @@ export function calculateNovatedLeaseScenario(
     residual.gst;
   const taxLifetime = (incomeTax + medicare) * years;
   const totalBenefit = taxLifetime + gstNetLifetime;
-  const savingsRows = [
-    {
-      label: 'Vehicle / lease + administration income tax',
-      annual: vehicleIncomeTax,
-      lifetime: vehicleIncomeTax * years,
-    },
-    {
-      label: 'Charging / fuel income tax',
-      annual: energyIncomeTax,
-      lifetime: energyIncomeTax * years,
-    },
-    {
-      label: 'Insurance + other running-cost income tax',
-      annual: otherIncomeTax,
-      lifetime: otherIncomeTax * years,
-    },
-    { label: 'Medicare levy', annual: medicare, lifetime: medicare * years },
-    {
-      label: 'Vehicle acquisition GST credit (once)',
-      annual: null,
-      lifetime: gst.recoverableVehicleGST,
-    },
-    {
-      label: 'Running-cost GST credits',
-      annual: runningCostGSTSaving,
-      lifetime: runningCostGSTSaving * years,
-    },
-    { label: 'Administration GST credits', annual: adminGst, lifetime: adminGst * years },
-    {
-      label: 'Employee-contribution GST remitted',
-      annual: -contributionGst,
-      lifetime: -contributionGst * years,
-    },
-    { label: 'GST paid on final residual', annual: null, lifetime: -residual.gst },
-  ];
   const taxSavingSteps = [
     step(
       'tax-vehicle-saving',
@@ -445,57 +410,6 @@ export function calculateNovatedLeaseScenario(
     warnings.push(
       'For a qualifying sole-parent Medicare reduction, choose family status. Single status uses individual levy thresholds.',
     );
-  const breakdown = [
-    {
-      label: 'Finance payments',
-      monthly: lease.monthly,
-      annual: lease.annual,
-      lifetime: lease.totalPayments,
-      section: 'finance',
-    },
-    {
-      label: 'Running expenses, net GST',
-      monthly: runningCosts.monthly,
-      annual: runningCosts.net,
-      lifetime: runningCosts.net * years,
-      section: 'running',
-    },
-    {
-      label: 'Administration, net GST',
-      monthly: adminNet / 12,
-      annual: adminNet,
-      lifetime: adminNet * years,
-      section: 'admin',
-    },
-    {
-      label: 'Gross package deduction',
-      monthly: grossAnnual / 12,
-      annual: grossAnnual,
-      lifetime: grossAnnual * years,
-      section: 'package',
-    },
-    {
-      label: 'Pre-tax portion',
-      monthly: preTax / 12,
-      annual: preTax,
-      lifetime: preTax * years,
-      section: 'package',
-    },
-    {
-      label: 'Post-tax portion',
-      monthly: postTax / 12,
-      annual: postTax,
-      lifetime: postTax * years,
-      section: 'package',
-    },
-    {
-      label: 'Take-home pay decrease',
-      monthly: takeHomeImpact.monthly,
-      annual: takeHomeImpact.annual,
-      lifetime: takeHomeImpact.annual * years,
-      section: 'take-home',
-    },
-  ];
   return {
     inputs,
     rules,
@@ -536,7 +450,6 @@ export function calculateNovatedLeaseScenario(
       taxLifetime,
       gstNetLifetime,
       totalBenefit,
-      rows: savingsRows,
       steps: savingSteps,
     },
     takeHomeImpact,
@@ -549,7 +462,6 @@ export function calculateNovatedLeaseScenario(
     },
     explanations,
     warnings,
-    breakdown,
   };
 }
 export type NovatedLeaseScenario = ReturnType<typeof calculateNovatedLeaseScenario>;

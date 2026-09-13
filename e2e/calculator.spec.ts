@@ -45,7 +45,14 @@ test('Chinese locale translates the calculator without changing the result', asy
   ).toBeVisible();
   await expect(page.getByText('租赁期限模拟', { exact: true })).toBeVisible();
   await expect(page.locator('.duration-table thead th').nth(1)).toHaveText('每月成本');
+  await expect(page.getByText('每月付款', { exact: true })).toBeVisible();
+  await expect(page.getByText('年度成本（自付）', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: '全部计算步骤' })).toBeVisible();
+  await expect(page.locator('#working-ledger')).toBeHidden();
+  await expect(page.locator('[data-testid="outright-comparison"]')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '全款购买 vs Novated Lease' })).toBeVisible();
+  await expect(page.locator('.comparison-chart-row')).toHaveCount(2);
+  await page.locator('.working-disclosure > summary').click();
   await expect(page.locator('#working-ledger .math-section').first().locator('h3')).toHaveText(
     '车辆购车价格',
   );
@@ -76,12 +83,20 @@ test('inputs come before results and the lease simulation is present', async ({ 
   await expect(page.locator('.duration-table tbody tr')).toHaveCount(5);
   await expect(page.locator('.duration-table thead th').nth(1)).toHaveText('Monthly cost');
   await expect(page.locator('#working')).toBeVisible();
-  await expect(page.locator('#working-ledger')).toBeVisible();
+  await expect(page.locator('#working-ledger')).toBeHidden();
+  await expect(page.locator('.working-disclosure > summary')).toContainText(
+    'Show all calculation steps',
+  );
+  await expect(page.getByText('MONTHLY PAYMENT', { exact: true })).toBeVisible();
+  await expect(page.getByText('Annual Cost (out-of-pocket)', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-testid="outright-comparison"]')).toBeVisible();
+  await expect(page.locator('.comparison-chart-row')).toHaveCount(2);
   await expect(page.locator('.scenario-explorer')).toHaveCount(0);
   await expect(page.locator('.scenario-controls')).toHaveCount(0);
   await expect(page.locator('.scenario-line-chart')).toHaveCount(0);
   await expect(page.locator('#comparison')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Show working', exact: true })).toHaveCount(0);
+  await page.locator('.working-disclosure > summary').click();
+  await expect(page.locator('#working-ledger')).toBeVisible();
   await expect(page.locator('#working-ledger .math-section')).toHaveCount(21);
   await expect(page.locator('#working-ledger .math-equation').first()).toBeVisible();
   await expect(page.locator('#working-ledger .math-equation code').first()).toBeVisible();
@@ -159,18 +174,14 @@ test('advanced conditions show limitations and unknown eligibility uses ECM', as
   await expect(page.locator('.eligibility')).toContainText('Unable to determine');
 });
 
-test('individual result working matches the headline; savings tab reconciles', async ({ page }) => {
+test('individual result working matches the headline', async ({ page }) => {
   await page.goto('/');
   await page.locator('.impact-main > .inline-working > summary').click();
   const value = await page.getByTestId('monthly-impact').textContent();
   await expect(
     page.locator('.impact-main [data-step="take-home-monthly"] .formula strong'),
   ).toContainText(value!);
-  await page.getByRole('tab', { name: 'Tax & GST savings' }).click();
-  await expect(page.getByRole('tabpanel')).toContainText('GST paid on final residual');
-  await page.getByRole('tab', { name: 'Cost breakdown' }).click();
-  await page.getByRole('button', { name: 'Finance payments', exact: true }).click();
-  await expect(page.locator('#working-finance')).toBeVisible();
+  await expect(page.getByRole('tab')).toHaveCount(0);
 });
 
 test('ICE inputs calculate fuel immediately and no horizontal body overflow after expansion', async ({
@@ -192,7 +203,7 @@ test('ICE inputs calculate fuel immediately and no horizontal body overflow afte
   );
 });
 
-test('responsive layouts and keyboard tabs work at narrow and intermediate widths', async ({
+test('responsive layouts and keyboard focus work at narrow and intermediate widths', async ({
   page,
 }) => {
   await page.goto('/');
@@ -203,11 +214,9 @@ test('responsive layouts and keyboard tabs work at narrow and intermediate width
       `body overflow at ${width}px`,
     ).toBe(true);
   }
-  await page.getByRole('tab', { name: 'Cost breakdown' }).focus();
-  await page.keyboard.press('ArrowRight');
-  await expect(page.getByRole('tab', { name: 'Tax & GST savings' })).toBeFocused();
-  await expect(page.getByRole('tab', { name: 'Tax & GST savings' })).toHaveAttribute(
-    'aria-selected',
-    'true',
-  );
+  const workingToggle = page.locator('.working-disclosure > summary');
+  await workingToggle.focus();
+  await expect(workingToggle).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#working-ledger')).toBeVisible();
 });
