@@ -1,38 +1,38 @@
 # Novate — Australian novated lease calculator
 
-A working, client-side calculator that answers the important question: **how much does the lease reduce my take-home pay, and what will I pay in total, including the residual?**
+![Novate calculator screenshot](./public/calculator-screenshot.png)
 
-Built with Next.js 16.3.5 (the stable npm release checked on 12 September 2026), React 19.3, strict TypeScript, and Tailwind CSS 4. The interface is available in English and Simplified Chinese through the language switcher. No database, authentication, API keys or calculation backend is used. No input data leaves the browser. No required Calculate button.
+Novate is a client-side Australian novated lease calculator. It answers the practical question: **how much will the lease reduce my take-home pay, and what will I pay in total, including the residual?**
 
-## Run locally
+Built with Next.js 16.3.5, React 19.3, strict TypeScript, and Tailwind CSS 4. The interface is available in English and Simplified Chinese. No database, authentication, API keys, or calculation backend is used, and input data stays in the browser.
 
-Use Node.js 24 LTS (see `.nvmrc`). A pinned Node 24 development dependency also supplies the runtime for npm scripts on this workspace.
+## What it does
 
-```bash
-npm ci
-npm run dev
-```
+Enter the vehicle, salary, lease, and running-cost assumptions to get an estimate that updates as you edit. The page keeps the flow in one readable sequence:
 
-Open [localhost:3000](http://localhost:3000). The demo scenario is populated immediately.
+1. Complete the inputs, grouped by vehicle, salary, lease, life on the road, and advanced settings.
+2. Review the monthly take-home impact, annual decrease, tax and GST benefit, and residual payable.
+3. Compare the same scenario across one- to five-year lease terms.
+4. Inspect the lean calculation ledger, with the formulas, substituted values, and results shown as math.
 
-```bash
-npm run lint
-npm run typecheck
-npm test
-npm run build
-npm run start
-```
+The calculator supports battery-electric, plug-in hybrid, and petrol vehicles, progressive income tax, Medicare, GST, FBT/employee contributions, English/Chinese translation, reset-to-demo defaults, keyboard navigation, and responsive desktop/mobile layouts. It is an estimate rather than a quote or personal tax, financial, or legal advice.
 
-For browser tests:
+## GitHub Pages deployment
 
-```bash
-npx playwright install chromium
-npm run test:e2e
-```
+This repository is configured for static GitHub Pages deployment:
 
-Playwright runs Chromium at desktop (1440 × 1050) and mobile (390 × 664, iPhone device settings) sizes. It starts the dev server if needed. To run against production, build and start first, then run the same tests. Screenshots and failure traces are written to `test-results/`; the HTML report is in `playwright-report/`.
+- `next.config.ts` enables Next.js static export and writes the deployable site to `out/`.
+- `.github/workflows/deploy.yml` installs Node.js 24, runs lint/type/unit checks, builds the export, and deploys it on pushes to `master` or `main`.
+- The workflow passes GitHub Pages' repository base path to Next.js, so project pages work at a URL such as `https://lihan.github.io/novated_car_lease_calculator/`.
 
-`npm run format` formats the code; `npm run format:check` checks formatting. Dependencies are pinned and the lockfile is included. TypeScript 6 and ESLint 9 are intentionally pinned for compatibility with Next.js's current lint plugins; TypeScript 7 and ESLint 10 exposed upstream plugin errors when tested.
+To enable it in GitHub:
+
+1. Push this repository to GitHub.
+2. Open **Settings → Pages** and set **Source** to **GitHub Actions**.
+3. Push to `master` or `main`, or run **Deploy static site to GitHub Pages** manually from the Actions tab.
+4. Open the published URL shown by the workflow's `github-pages` environment.
+
+The export contains no server or API dependency; the calculator runs in the browser after the static page loads. See the [Next.js static export guide](https://nextjs.org/docs/app/guides/static-exports) and [GitHub Pages deployment guide](https://docs.github.com/en/get-started/start-your-journey/deploying-your-website-automatically) for the platform details.
 
 ## Architecture
 
@@ -233,14 +233,15 @@ To update:
 - The production build prerenders the page; interactivity then runs in the browser.
 - Source verification is deliberately distinct from software verification: tests passing cannot certify an unverified regulatory threshold or a provider's contract.
 
-## Deploy to Vercel
-
-1. Push the project and lockfile to your Git repository.
-2. Import it into Vercel, select **Next.js** and **Node.js 24.x**.
-3. Use `npm ci` as the install command and `npm run build` as the build command. Keep the default Next.js output directory.
-4. No environment variables or backend services are required.
-5. Review a preview deployment and confirm the GST thresholds and provider assumptions before publishing it as a financial tool.
-
-The app also runs with `npm run build && npm run start` on a Node host. It has not been published to an external host by this task.
-
 This calculator is an estimation tool, not personal tax, financial or legal advice.
+
+## Run locally
+
+Use Node.js 24 (the version in `.nvmrc`), then install dependencies and start the development server:
+
+```bash
+npm ci
+npm run dev
+```
+
+Open [localhost:3000](http://localhost:3000). To verify the static export locally, run `npm run build`; the generated site is written to `out/`.
